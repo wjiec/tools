@@ -33,6 +33,7 @@ type Options struct {
 	// set, instructs Process to sort the import paths with the given prefixes
 	// into another group after 3rd-party packages.
 	LocalPrefix string
+	SortEntireImport bool // Sort runs of specs on entire import block.
 
 	Fragment  bool // Accept fragment of a source file (no package statement)
 	AllErrors bool // Report all errors (not just the first 10 on different lines)
@@ -105,7 +106,7 @@ func ApplyFixes(fixes []*ImportFix, filename string, src []byte, opt *Options, e
 
 func formatFile(fileSet *token.FileSet, file *ast.File, src []byte, adjust func(orig []byte, src []byte) []byte, opt *Options) ([]byte, error) {
 	mergeImports(fileSet, file)
-	sortImports(opt.LocalPrefix, fileSet, file)
+	sortImports(opt.LocalPrefix, fileSet, file, opt.SortEntireImport)
 	imps := astutil.Imports(fileSet, file)
 	var spacesBefore []string // import paths we need spaces before
 	for _, impSection := range imps {

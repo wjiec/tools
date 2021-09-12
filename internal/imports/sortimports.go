@@ -15,7 +15,7 @@ import (
 
 // sortImports sorts runs of consecutive import lines in import blocks in f.
 // It also removes duplicate imports when it is possible to do so without data loss.
-func sortImports(localPrefix string, fset *token.FileSet, f *ast.File) {
+func sortImports(localPrefix string, fset *token.FileSet, f *ast.File, sortEntire bool) {
 	for i, d := range f.Decls {
 		d, ok := d.(*ast.GenDecl)
 		if !ok || d.Tok != token.IMPORT {
@@ -34,14 +34,16 @@ func sortImports(localPrefix string, fset *token.FileSet, f *ast.File) {
 			continue
 		}
 
-		// Identify and sort runs of specs on successive lines.
 		i := 0
 		specs := d.Specs[:0]
-		for j, s := range d.Specs {
-			if j > i && fset.Position(s.Pos()).Line > 1+fset.Position(d.Specs[j-1].End()).Line {
-				// j begins a new run.  End this one.
-				specs = append(specs, sortSpecs(localPrefix, fset, f, d.Specs[i:j])...)
-				i = j
+		if !sortEntire {
+			// Identify and sort runs of specs on successive lines.
+			for j, s := range d.Specs {
+				if j > i && fset.Position(s.Pos()).Line > 1+fset.Position(d.Specs[j-1].End()).Line {
+					// j begins a new run.  End this one.
+					specs = append(specs, sortSpecs(localPrefix, fset, f, d.Specs[i:j])...)
+					i = j
+				}
 			}
 		}
 		specs = append(specs, sortSpecs(localPrefix, fset, f, d.Specs[i:])...)
